@@ -2,7 +2,7 @@ import java.util.*;
 
 interface INIT_MENU {
 	
-	int INPUT=1, SEARCH=2, DELETE=3, EXIT=4;
+	int INPUT=1, SEARCH=2, DELETE=3, SHOW=4, EXIT=5;
 }
 
 interface INPUT_SELECT {
@@ -32,6 +32,15 @@ class PhoneInfo {
 	public void ShowInfo() {
 		System.out.println("name : " + name);
 		System.out.println("phoneNum : " + phoneNum);
+	}
+	
+	public int hashCode() {
+		return name.hashCode();
+	}
+	public boolean equals(String name) {
+		if(this.name.equals(name))
+			return true;
+		else return false;
 	}
 }
 
@@ -67,16 +76,17 @@ class PhoneCompanyInfo extends PhoneInfo {
 }
 
 class PhoneBookManager {
-	final int MAX_CNT=100;
-	PhoneInfo[] pInfo = new PhoneInfo[MAX_CNT];
-	int curCnt = 0;
+	// int MAX_CNT=100;
+	//PhoneInfo[] pInfo = new PhoneInfo[MAX_CNT];
+	//int curCnt = 0;
+
+	HashSet<PhoneInfo> hs = new HashSet<PhoneInfo>();
 
 	//이해해야되는 점
 	static PhoneBookManager inst = null;
 	public static PhoneBookManager createManagerInst() {
 		if(inst == null)
 			inst = new PhoneBookManager();
-		
 		return inst;
 	}
 	private PhoneInfo readFriendInfo() {
@@ -133,21 +143,27 @@ class PhoneBookManager {
 				info = readCompanyFriendInfo();
 				break;
 		}
-		pInfo[curCnt++] = info;
-		System.out.println("데이터 입력이 완료되었습니다.");
+		if(hs.contains(search(info.name))) {
+			System.out.println("이미 저장된 데이터입니다.");
+		} else {
+			hs.add(info);
+			System.out.println("데이터 입력이 완료되었습니다.");
+		}
 	}
 	
 	public void searchData() {
 		System.out.println("데이터 검색을 시작합니다.");
 		System.out.println("이름 : ");
 		String name = MenuViewer.scan.nextLine();
-		int compNum = search(name);
-		if(compNum == -1) {
+		PhoneInfo searchInfo = search(name);
+		if(searchInfo == null) {
 			System.out.println("일치하는 데이터를 조회할 수 없습니다.");
 		}
 		else {
 			System.out.println("데이터 조회를 완료했습니다.");
-			pInfo[compNum].ShowInfo();
+			//pInfo[compNum].ShowInfo();
+			searchInfo.ShowInfo();
+			
 		}
 	}
 	
@@ -155,24 +171,44 @@ class PhoneBookManager {
 		System.out.println("데이터 삭제를 시작합니다.");
 		System.out.println("이름 : ");
 		String name = MenuViewer.scan.nextLine();
-		int compNum = search(name);
-		if(compNum == -1)
+		PhoneInfo delInfo = search(name);
+		if(delInfo == null)
 			System.out.println("일치하는 데이터를 조회할 수 없습니다.");
 		else {
-			for(int i =compNum;i<curCnt;i++) {
+			/*for(int i =compNum;i<curCnt;i++) {
 				pInfo[compNum] = pInfo[compNum+1];		
 			}
 			curCnt--;
 			System.out.println("데이터 삭제를 완료했습니다.");
+			*/
+			hs.remove(delInfo);
+			System.out.println("데이터 삭제를 완료했습니다.");
 		}
 	}
 	
-	public int search(String compName) {
-		for(int i = 0 ; i < curCnt; i++) {
+	public void showInfoList() {
+		Iterator<PhoneInfo> itr = hs.iterator();
+		while(itr.hasNext()) {
+			PhoneInfo impl = itr.next();
+			impl.ShowInfo();
+			System.out.println();
+		}	
+	}
+	
+	public PhoneInfo search(String compName) {
+		/*for(int i = 0 ; i < curCnt; i++) {
 			if(pInfo[i].name.compareTo(compName) == 0)
 				return i;
 		}
 		return -1;
+		*/
+		Iterator<PhoneInfo> itr = hs.iterator();
+		while(itr.hasNext()) {
+			PhoneInfo implInfo = itr.next();
+			if(implInfo.equals(compName))
+				return implInfo;
+		}
+		return null;
 	}
 }
 
@@ -184,7 +220,8 @@ class MenuViewer {
 		System.out.println("1. 데이터 입력");
 		System.out.println("2. 데이터 검색");
 		System.out.println("3. 데이터 삭제");
-		System.out.println("4. 프로그램 종료");
+		System.out.println("4. 데이터 출력");
+		System.out.println("5. 프로그램 종료");
 		System.out.println("선택 >> ");	
 		
 	}
@@ -210,6 +247,9 @@ public class PhoneBookVer06 {
 					break;
 				case INIT_MENU.DELETE :
 					manager.deleteData();
+					break;
+				case INIT_MENU.SHOW :
+					manager.showInfoList();
 					break;
 				case INIT_MENU.EXIT :
 					System.out.println("프로그램을 종료합니다.");
